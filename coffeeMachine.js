@@ -51,41 +51,80 @@ class CoffeeMachine
         this.ip = ip;
     }
 
-    setStrength(coffeeStrength, callback) {
+    setStrength(strength, callback) {
 
-        var code = -1;
-        switch (coffeeStrength) {
-            case 'weak':
-                code = 0;
-                break;
-            case 'medium':
-                code = 1;
-                break;
-            case 'strong':
-                code = 2;
-                break;
-            default:
-                return postErrorToCallback('Strength must be "weak", "medium", or "strong"', callback);
+        var strengthAsInt = parseInt(strength);
+        if (isNaN(strengthAsInt) || strengthAsInt < 0 || strengthAsInt > 2) {
+            return postErrorToCallback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)", callback);
         }
 
-        console.log(`Setting coffee strength to ${coffeeStrength}`);
-        var command = new Buffer([Smarter.strengthRequestByte, code, Smarter.messageTerminator]);
+        console.log(`Setting strength to ${strengthAsInt}`);
+        var command = new Buffer([Smarter.strengthRequestByte, strengthAsInt, Smarter.messageTerminator]);
         sendCommand(this.ip, command, callback);
     }
 
     setCups(cups, callback) {
-        if (cups < 1 || cups > 12) {
-            return postErrorToCallback('Cups must be a number between 1 to 12 inclusive', callback);
+
+        var cupsAsInt = parseInt(cups);
+        if (isNaN(cupsAsInt) || cupsAsInt < 1 || cupsAsInt > 12) {
+            return postErrorToCallback("'cups' must be a number between 1 to 12 inclusive", callback);
         }
 
-        console.log(`Setting number of cups to ${cups}`);
-        var command = new Buffer([Smarter.cupsRequestByte, cups, Smarter.messageTerminator]);
+        console.log(`Setting cups to ${cupsAsInt}`);
+        var command = new Buffer([Smarter.cupsRequestByte, cupsAsInt, Smarter.messageTerminator]);
         sendCommand(this.ip, command, callback);
     }
 
-    brewDefault(callback) {
+    brewOn(grind, cups, strength, callback) {
+
+        var grindAsInt = parseInt(grind);
+        if (isNaN(grindAsInt) || grindAsInt < 0 || grindAsInt > 1) {
+            return postErrorToCallback("'grind' must be 0 (off) or 1 (on)", callback);
+        }
+
+        var cupsAsInt = parseInt(cups);
+        if (isNaN(cupsAsInt) || cupsAsInt < 1 || cupsAsInt > 12) {
+            return postErrorToCallback("'cups' must be a number between 1 to 12 inclusive", callback);
+        }
+
+        var strengthAsInt = parseInt(strength);
+        if (isNaN(strengthAsInt) || strengthAsInt < 0 || strengthAsInt > 2) {
+            return postErrorToCallback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)", callback);
+        }
+
+        console.log(`Brewing coffee with grind ${grindAsInt}, cups ${cupsAsInt}, strength ${strengthAsInt}`);
+        var command = new Buffer([Smarter.brewOnRequestByte, cupsAsInt, strengthAsInt, 0x5 /*unknown*/, grindAsInt, Smarter.messageTerminator]);
+        sendCommand(this.ip, command, callback);
+    }
+
+    brewOnDefault(callback) {
         console.log('Brewing coffee with default settings');
-        var command = new Buffer([Smarter.brewDefaultRequestByte, Smarter.messageTerminator]);
+        var command = new Buffer([Smarter.brewOnDefaultRequestByte, Smarter.messageTerminator]);
+        sendCommand(this.ip, command, callback);
+    }
+
+    brewOff(callback) {
+        console.log('Stopping coffee brew');
+        var command = new Buffer([Smarter.brewOffRequestByte, 0, Smarter.messageTerminator]);
+        sendCommand(this.ip, command, callback);
+    }
+
+    hotplateOn(mins, callback) {
+        var minsAsInt = 5;
+        if (mins !== undefined) {
+            minsAsInt = parseInt(mins);
+            if (isNaN(minsAsInt) || minsAsInt < 1 || minsAsInt > 30) {
+                return postErrorToCallback("'mins' must be a number between 1 to 30 inclusive", callback);
+            }
+        }
+        console.log(`Turning on hotplate for ${minsAsInt} mins`);
+        var command = new Buffer([Smarter.hotplateOnRequestByte, minsAsInt, Smarter.messageTerminator]);
+        sendCommand(this.ip, command, callback);
+    }
+
+    hotplateOff(callback) {
+        console.log('Turning off hotplate');
+        var command = new Buffer([Smarter.hotplateOffRequestByte, Smarter.messageTerminator]);
         sendCommand(this.ip, command, callback);
     }
 
