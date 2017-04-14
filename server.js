@@ -15,7 +15,43 @@ function getDevices(req, res) {
     res.json(obj);
 }
 
+function setStrength(req, res) {
+    var id = req.params.id;
+    var strength = req.params.strength;
 
+    var device = deviceManager.devices.get(id);
+    if (!device) {
+        res.status(404).send();
+        return;
+    }
+
+    device.setStrength(strength, err => {
+        if (err) {
+            res.status(500).send();
+        } else {
+            res.status(200).send();
+        }
+    });
+}
+
+function setCups(req, res) {
+    var id = req.params.id;
+    var cups = req.params.cups;
+
+    var device = deviceManager.devices.get(id);
+    if (!device) {
+        res.status(404).send();
+        return;
+    }
+
+    device.setCups(cups, err => {
+        if (err) {
+            res.status(500).send();
+        } else {
+            res.status(200).send();
+        }
+    });
+}
 class Server 
 {
     start() {
@@ -25,6 +61,8 @@ class Server
         var router = express.Router();
 
         router.get('/devices', getDevices);
+        router.post('/:id/strength/:strength', setStrength);
+        router.post('/:id/cups/:cups', setCups);
 
         app.use('/api', router);
 
