@@ -1,12 +1,9 @@
 'use strict';
 
 const deviceManager = require('./deviceManager.js');
-const server = require('./server.js');
-
-server.start();
+const api = require('./api.js');
+const upnp = require('./upnp.js');
 
 deviceManager.start();
-
-deviceManager.on('discovered', device => {
-    console.log(`Device discovered: ${device}`);
-});
+api.start();
+upnp.start();

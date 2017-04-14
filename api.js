@@ -112,7 +112,7 @@ function sendResult(res, err) {
     }
 }
 
-class Server 
+class Api 
 {
     start() {
         app.use(bodyParser.urlencoded({ extended: true }));
@@ -133,8 +133,8 @@ class Server
 
         app.listen(port);
         
-        console.log('Started API on port ' + port);
+        console.log(`Started API on port ${port}`);
     }
 }
 
-module.exports = new Server();
+module.exports = new Api();
