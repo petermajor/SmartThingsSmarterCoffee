@@ -10,7 +10,6 @@ function sendCommand(ip, command, callback) {
 
     client.once('connect', () => {
         console.log(`Connected to machine ${ip}`);
-
         console.log(`Sending command`);
         client.write(command, () => {
         });
@@ -20,18 +19,23 @@ function sendCommand(ip, command, callback) {
         console.log(`Error ${error}`);
         callback(error);
     });
+
     client.once('data', (data) => {
         client.end(); 
-        if (data && data.length > 0 && data[0] === Smarter.successReplyByte) {
-            console.log("Success");
-            callback();
-        } else {
+
+        if (!data || data.length === 0 || data[0] !== Smarter.successReplyByte) {
             console.log("Unexpected result");
-            callback("unexpected result");
+            return callback("unexpected result");
         }
+
+        console.log("Success");
+        callback();
     });
 }
 
+function postErrorToCallback(message, callback) {
+    process.nextTick(() => callback(message));
+}
 
 class CoffeeMachine
 {
@@ -61,8 +65,7 @@ class CoffeeMachine
                 code = 2;
                 break;
             default:
-                process.nextTick(() => callback('Strength must be "weak", "medium", or "strong"'));
-                return ;
+                return postErrorToCallback('Strength must be "weak", "medium", or "strong"', callback);
         }
 
         console.log(`Setting coffee strength to ${coffeeStrength}`);
@@ -72,8 +75,7 @@ class CoffeeMachine
 
     setCups(cups, callback) {
         if (cups < 1 || cups > 12) {
-            process.nextTick(() => callback('Cups must be a number between 1 to 12 inclusive'));
-            return;
+            return postErrorToCallback('Cups must be a number between 1 to 12 inclusive', callback);
         }
 
         console.log(`Setting number of cups to ${cups}`);

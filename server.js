@@ -27,7 +27,7 @@ function setStrength(req, res) {
 
     device.setStrength(strength, err => {
         if (err) {
-            res.status(500).send();
+            res.status(400).send(err);
         } else {
             res.status(200).send();
         }
@@ -46,7 +46,7 @@ function setCups(req, res) {
 
     device.setCups(cups, err => {
         if (err) {
-            res.status(500).send();
+            res.status(400).send(err);
         } else {
             res.status(200).send();
         }
@@ -64,7 +64,7 @@ function brewDefault(req, res) {
 
     device.brewDefault(err => {
         if (err) {
-            res.status(500).send();
+            res.status(400).send(err);
         } else {
             res.status(200).send();
         }
