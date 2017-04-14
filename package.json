@@ -1,0 +1,21 @@
+{
+  "name": "smartercoffee.js",
+  "version": "1.0.0",
+  "description": "A REST API facade for Smarter coffee machines",
+  "main": "app.js",
+  "author": {
+    "name": "Peter Major",
+    "email": "petermajoruk@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "debug": "~2.6.3",
+    "express": "~4.15.2",
+    "body-parser": "~1.17.1",
+    "macfromip": "~1.1.1",
+    "node-ssdp": "~3.2.1",
+    "jshint": "*"
+  },
+  "devDependencies": {
+  }
+}
