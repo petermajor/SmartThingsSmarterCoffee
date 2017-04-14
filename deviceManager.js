@@ -76,23 +76,25 @@ class DeviceManager extends EventEmitter
             if (message.length >= 4 && message[0] == Smarter.discoverReplyByte && message[1] == Smarter.coffeeDeviceType && message[3] == Smarter.messageTerminator) {
                     
                 let ip = remote.address;
-                console.log(`UDP response received from ${ip} - ${message}`);
+                console.log(`Response received from ${ip}`);
                 
                 macfromip.getMac(ip, (err, mac) => {
                     if(err){
                         console.log(`Error getting mac address for address ${ip}`);
                         return;
                     }
-
+                    
                     console.log(`Resolved ${ip} to ${mac}`);
-                    if (this.devices.has(mac)) {
+
+                    var id = CoffeeMachine.idFromMac(mac);
+                    if (this.devices.has(id)) {
                         console.log(`Device ${mac} already known`);
-                        let device = this.devices.get(mac);
-                        // update the device ip if necessary
+                        let device = this.devices.get(id);
+                        device.updateIp(ip);
                     } else {
                         console.log(`Device ${mac} is new`);
                         let device = new CoffeeMachine(mac, ip);
-                        this.devices.set(device.mac, device);
+                        this.devices.set(device.id, device);
                         this.emit('discovered', device);
                     }
                 });
