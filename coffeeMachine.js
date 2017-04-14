@@ -8,7 +8,7 @@ function sendCommand(ip, command, callback) {
     console.log(`Connecting to machine ${ip}`);
     var client = net.createConnection({ port:Smarter.port, host:ip });
 
-    client.on('connect', () => {
+    client.once('connect', () => {
         console.log(`Connected to machine ${ip}`);
 
         console.log(`Sending command`);
@@ -16,11 +16,11 @@ function sendCommand(ip, command, callback) {
         });
     });
 
-    client.on('error', (error) => {
+    client.once('error', (error) => {
         console.log(`Error ${error}`);
         callback(error);
     });
-    client.on('data', (data) => {
+    client.once('data', (data) => {
         client.end(); 
         if (data && data.length > 0 && data[0] === Smarter.successReplyByte) {
             console.log("Success");
@@ -29,9 +29,6 @@ function sendCommand(ip, command, callback) {
             console.log("Unexpected result");
             callback("unexpected result");
         }
-
-    });
-    client.on('end', () => {
     });
 }
 
@@ -81,6 +78,12 @@ class CoffeeMachine
 
         console.log(`Setting number of cups to ${cups}`);
         var command = new Buffer([Smarter.cupsRequestByte, cups, Smarter.messageTerminator]);
+        sendCommand(this.ip, command, callback);
+    }
+
+    brewDefault(callback) {
+        console.log('Brewing coffee with default settings');
+        var command = new Buffer([Smarter.brewDefaultRequestByte, Smarter.messageTerminator]);
         sendCommand(this.ip, command, callback);
     }
 

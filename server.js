@@ -52,6 +52,25 @@ function setCups(req, res) {
         }
     });
 }
+
+function brewDefault(req, res) {
+    var id = req.params.id;
+
+    var device = deviceManager.devices.get(id);
+    if (!device) {
+        res.status(404).send();
+        return;
+    }
+
+    device.brewDefault(err => {
+        if (err) {
+            res.status(500).send();
+        } else {
+            res.status(200).send();
+        }
+    });
+}
+
 class Server 
 {
     start() {
@@ -63,6 +82,7 @@ class Server
         router.get('/devices', getDevices);
         router.post('/:id/strength/:strength', setStrength);
         router.post('/:id/cups/:cups', setCups);
+        router.post('/:id/brew', brewDefault);
 
         app.use('/api', router);
 
