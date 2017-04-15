@@ -29,12 +29,12 @@ Use the SmartThings Graph IDE to install the [Device Handler](https://github.com
 4. Use the SmartThings Graph IDE to install the [Device Handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy).
 5. Use the SmartThings Graph IDE to install the [SmartApp](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy).
 6. Use the SmartThings mobile app to create an instance of the SmartApp:
-  1. Tap _Automation_ > _SmartApps_
-  2. Scroll to the bottom and select _Add a SmartApp_
-  3. Scroll to the bottom and select _My Apps_
-  4. Find _Smarter Manager_ in list and tap on it
-  5. Wait a min for the SmartApp to discover your Node.js server and the Coffee Machine via UPnP
-  6. Select _Coffee Machine_ and tap the _Done_ button at the top
+    1. Tap _Automation_ > _SmartApps_
+    2. Scroll to the bottom and select _Add a SmartApp_
+    3. Scroll to the bottom and select _My Apps_
+    4. Find _Smarter Manager_ in list and tap on it
+    5. Wait a min for the SmartApp to discover your Node.js server and the Coffee Machine via UPnP
+    6. Select _Coffee Machine_ and tap the _Done_ button at the top
 
 If the installation completed with errors, you will have a device called _Coffee Machine_ added to your device list.
 
