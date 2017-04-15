@@ -8,7 +8,19 @@
 * Tested on Node.js 6.10.2. It may work on other versions.
 * Tested on Mac OS and Raspberry Pi Raspian. Should work on Windows, but I haven't tried it.
 * When the server starts, it will discover coffee machine(s) via UDP broadcast. Coffee machine(s) must already be on the same network.
-* To control with SmartThings, you must install a [Smart App](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy) and a [Device Handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy).
+
+### SmartThings
+
+The Smarter Coffee machine communicates by sending bits over sockets. The makes it impossible to control directly with SmartThings, as SmartThings device handlers can only communicate with LAN devices via HTTP with XML / JSON.
+
+SmartThingsSmarterCoffee converts HTTP calls from SmartThings into binary commands and sends them to the coffee machine.
+
+To contol your coffee machine with SmartThings you'll need:
+* this Node.js app, running on a computer. I recommend a Raspberry Pi. 
+* the companion SmartThings [device handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy). This device handler provides the "on/off" button for your coffee machine in SmartThings
+* the companion SmartThings [smart app](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy). The smart app locates the SmartThingsSmarterCoffee server via UPnP and creates the actual coffee machine device. It also updates the device settings in the case of either SmartThingsSmarterCoffee or the coffee machine IP address changes.
+
+Use the SmartThings Graph IDE to install the [device handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy) and [smart app](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy).
 
 ### Usage
 1. Clone the repository into a folder.
