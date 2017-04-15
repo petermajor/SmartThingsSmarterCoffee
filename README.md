@@ -17,15 +17,28 @@ SmartThingsSmarterCoffee converts HTTP calls from SmartThings into binary comman
 
 To contol your coffee machine with SmartThings you'll need:
 * this Node.js app, running on a computer. I recommend a Raspberry Pi. 
-* the companion SmartThings [device handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy). This device handler provides the "on/off" button for your coffee machine in SmartThings
-* the companion SmartThings [smart app](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy). The smart app locates the SmartThingsSmarterCoffee server via UPnP and creates the actual coffee machine device. It also updates the device settings in the case of either SmartThingsSmarterCoffee or the coffee machine IP address changes.
+* the companion SmartThings [Device Handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy). This device handler provides the "on/off" button for your coffee machine in SmartThings
+* the companion SmartThings [SmartApp](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy). The smart app locates the SmartThingsSmarterCoffee server via UPnP and creates the actual coffee machine device. It also updates the device settings in the case of either SmartThingsSmarterCoffee or the coffee machine IP address changes.
 
-Use the SmartThings Graph IDE to install the [device handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy) and [smart app](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy).
+Use the SmartThings Graph IDE to install the [Device Handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy) and [SmartApp](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy).
 
 ### Usage
-1. Clone the repository into a folder.
-2. Run `npm install` from the top folder of the clone.
+1. Clone the SmartThingsSmarterCoffee repository into a folder on your server.
+2. Run `npm install` from the top folder of the clone to install module dependencies.
 3. Run `node app.js` from the top folder of the install.
+4. Use the SmartThings Graph IDE to install the [Device Handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy).
+5. Use the SmartThings Graph IDE to install the [SmartApp](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy).
+6. Use the SmartThings mobile app to create an instance of the SmartApp:
+  1. Tap _Automation_ > _SmartApps_
+  2. Scroll to the bottom and select _Add a SmartApp_
+  3. Scroll to the bottom and select _My Apps_
+  4. Find _Smarter Manager_ in list and tap on it
+  5. Wait a min for the SmartApp to discover your Node.js server and the Coffee Machine via UPnP
+  6. Select _Coffee Machine_ and tap the _Done_ button at the top
+
+If the installation completed with errors, you will have a device called _Coffee Machine_ added to your device list.
+
+You can now use that like any other on/off switch in SmartThings, including control with Amazon Echo or Google Home.
 
 ### Raspberry Pi
 
