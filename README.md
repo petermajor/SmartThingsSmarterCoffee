@@ -28,7 +28,15 @@ Example response:
     "id": "18fe34f86975",
     "mac": "18:fe:34:f8:69:75",
     "ip": "192.168.1.15",
-    "name": "Smarter Coffee Machine"
+    "name": "Coffee Machine",
+    "cups": 3,
+    "strength": 0,
+    "isGrind": false,
+    "isCarafeDetected": true,
+    "isHotplateOn": true,
+    "isBrewing": false,
+    "waterLevel": 2,
+    "isConnected": true
   }
 }
 ```
@@ -43,12 +51,19 @@ Gets the status of the specified machine.
 Example response:
 ```
 {
-    "id": "18fe34f86975",
-    "mac": "18:fe:34:f8:69:75",
-    "ip": "192.168.1.15",
-    "name": "Smarter Coffee Machine"
-}
-```
+  "id": "18fe34f86975",
+  "mac": "18:fe:34:f8:69:75",
+  "ip": "192.168.1.15",
+  "name": "Coffee Machine",
+  "cups": 3,
+  "strength": 0,
+  "isGrind": false,
+  "isCarafeDetected": true,
+  "isHotplateOn": true,
+  "isBrewing": false,
+  "waterLevel": 2,
+  "isConnected": true
+}```
 
 #### POST /api/device/{id}/cups
 

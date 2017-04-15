@@ -14,11 +14,8 @@ class CoffeeMachine
         this.strength = null;
         this.grind = null;
         this.isCarafeDetected = null;
-        this.isReady = null;
-        this.isGrindInProgress = null;
-        this.isWaterPumpInProgress = null;
-        this.isCycleComplete = null;
         this.isHotplateOn = null;
+        this.isBrewing = null;
         this.waterLevel = null;
         this.isConnected = false;
     }
@@ -56,14 +53,21 @@ class CoffeeMachine
                 return;
             console.log(`Received status message from machine ${this.ip} - ${data.join(',')}`);
 
-            // TODO: set properties from data
+            // not sure what isReady is... don't think it's "machine is ready to brew"
+            // it might be "you're coffee is ready" as it doesn't stay set that long
+            //this.isReady = (data[1] & 4) >= 1;
+            // not useful
+            //this.isCycleComplete = (data[1] & 32) >= 1;
+
+            // combine these two properties into something more useful
+            let isGrindInProgress = (data[1] & 8) >= 1;
+            let isWaterPumpInProgress = (data[1] & 16) >= 1;
+            this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
+
             this.isCarafeDetected = (data[1] & 1) >= 1;
             this.isGrind = (data[1] & 2) >= 1;
-            this.isReady = (data[1] & 4) >= 1;
-            this.isGrindInProgress = (data[1] & 8) >= 1;
-            this.isWaterPumpInProgress = (data[1] & 16) >= 1;
-            this.isCycleComplete = (data[1] & 32) >= 1;
             this.isHotplateOn = (data[1] & 64) >= 1;
+            this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
             this.waterLevel = (data[2] & 15);
             this.strength = (data[4] & 3);
             this.cups = (data[5] & 15);
@@ -193,11 +197,8 @@ class CoffeeMachine
             strength : this.strength,
             isGrind : this.isGrind,
             isCarafeDetected : this.isCarafeDetected,
-            isReady : this.isReady,
-            isGrindInProgress : this.isGrindInProgress,
-            isWaterPumpInProgress : this.isWaterPumpInProgress,
-            isCycleComplete : this.isCycleComplete,
             isHotplateOn : this.isHotplateOn,
+            isBrewing : this.isBrewing,
             waterLevel : this.waterLevel,
             isConnected : this.isConnected
         };
