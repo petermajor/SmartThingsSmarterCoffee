@@ -5,7 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const deviceManager = require('./deviceManager.js');
 
-const port = process.env.PORT || 8080;
+const port = 2080;
 
 function getDevice(req, res) {
 

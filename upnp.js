@@ -16,11 +16,16 @@ class Upnp
 
         this.bus.advertise({
             usn: ServerUsn,
-            // location: {
-            //     udp4: 'http://192.168.1.14:8080/ssdp/details.xml'
-            // },
             details: {
-                URLBase: 'https://192.168.1.14:8001'
+                device: {
+                    friendlyName: 'SmartThingsSmarterCoffee server',
+                    manufacturer: 'Peter Major',
+                    manufacturerURL: 'https://github.com/petermajor/SmartThingsSmarterCoffee',
+                    modelDescription: '',
+                    modelName: 'SmartThingsSmarterCoffee',
+                    modelURL: 'https://github.com/petermajor/SmartThingsSmarterCoffee',
+                    serialNumber: '1'
+                }
             }
         });
 

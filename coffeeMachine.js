@@ -43,7 +43,7 @@ class CoffeeMachine
         this.id = CoffeeMachine.idFromMac(mac);
         this.mac = mac;
         this.ip = ip;
-        this.name = "Smarter Coffee Machine";
+        this.name = "Coffee Machine";
     }
 
     updateIp(ip) {
