@@ -17,13 +17,13 @@ function getDevice(req, res) {
         return;
     }
 
-    res.json(device);
+    res.json(device.toStatus());
 }
 
 function getDevices(req, res) {
     var obj = {};
     for (const entry of deviceManager.devices) {
-        obj[entry[0]] = entry[1];
+        obj[entry[0]] = entry[1].toStatus();
     }
     res.json(obj);
 }
@@ -52,6 +52,18 @@ function setCups(req, res) {
     device.setCups(req.body.cups, err => sendResult(res, err));
 }
 
+function setGrind(req, res) {
+    var id = req.params.id;
+
+    var device = deviceManager.devices.get(id);
+    if (!device) {
+        res.status(404).send();
+        return;
+    }
+
+    device.setGrind(req.body.isGrind, err => sendResult(res, err));
+}
+
 function setBrewOn(req, res) {
     var id = req.params.id;
 
@@ -64,7 +76,7 @@ function setBrewOn(req, res) {
     if (Object.keys(req.body).length === 0) {
         device.brewOnDefault(err => sendResult(res, err));
     } else {
-        device.brewOn(req.body.grind, req.body.cups, req.body.strength, err => sendResult(res, err));
+        device.brewOn(req.body.isGrind, req.body.cups, req.body.strength, err => sendResult(res, err));
     }
 }
 
@@ -124,6 +136,7 @@ class Api
         router.get('/device/:id', getDevice);
         router.post('/device/:id/strength', setStrength);
         router.post('/device/:id/cups', setCups);
+        router.post('/device/:id/grind', setGrind);
         router.post('/device/:id/brew/on', setBrewOn);
         router.post('/device/:id/brew/off', setBrewOff);
         router.post('/device/:id/hotplate/on', setHotplateOn);

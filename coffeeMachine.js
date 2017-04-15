@@ -3,40 +3,6 @@
 const net = require('net');
 const Smarter = require('./smarter.js');
 
-function sendCommand(ip, command, callback) {
-
-    console.log(`Connecting to machine ${ip}`);
-    var client = net.createConnection({ port:Smarter.port, host:ip });
-
-    client.once('connect', () => {
-        console.log(`Connected to machine ${ip}`);
-        console.log(`Sending command`);
-        client.write(command, () => {
-        });
-    });
-
-    client.once('error', (error) => {
-        console.log(`Error ${error}`);
-        callback(error);
-    });
-
-    client.once('data', (data) => {
-        client.end(); 
-
-        if (!data || data.length === 0 || data[0] !== Smarter.successReplyByte) {
-            console.log("Unexpected result");
-            return callback("unexpected result");
-        }
-
-        console.log("Success");
-        callback();
-    });
-}
-
-function postErrorToCallback(message, callback) {
-    process.nextTick(() => callback(message));
-}
-
 class CoffeeMachine
 {
     constructor(mac, ip) {
@@ -44,88 +10,197 @@ class CoffeeMachine
         this.mac = mac;
         this.ip = ip;
         this.name = "Coffee Machine";
+        this.cups = null;
+        this.strength = null;
+        this.grind = null;
+        this.isCarafeDetected = null;
+        this.isReady = null;
+        this.isGrindInProgress = null;
+        this.isWaterPumpInProgress = null;
+        this.isCycleComplete = null;
+        this.isHotplateOn = null;
+        this.waterLevel = null;
+        this.isConnected = false;
     }
 
     updateIp(ip) {
         if (ip === this.ip) return;
         this.ip = ip;
+        // TODO disconnect and reconnect
+    }
+
+    connect() {
+        if (this.isConnected) return;
+
+        console.log(`Connecting to machine ${this.ip}`);
+        this.client = net.createConnection({ port:Smarter.port, host:this.ip });
+
+        this.client.on('connect', () => {
+            console.log(`Connected to machine ${this.ip}`);
+            this.isConnected = true;
+        });
+
+        // this.client.on('error', (error) => {
+        //     console.log(`Error ${error}`);
+        //     // TODO
+        // });
+
+        this.client.on('end', () => {
+            this.isConnected = false;
+            console.log(`Disconnecting from machine ${this.ip}`);
+         });
+
+        this.client.on('data', (data) => {
+
+            if (!data || data.length === 0 || data[0] !== Smarter.statusReplyByte)
+                return;
+            console.log(`Received status message from machine ${this.ip} - ${data.join(',')}`);
+
+            // TODO: set properties from data
+            this.isCarafeDetected = (data[1] & 1) >= 1;
+            this.isGrind = (data[1] & 2) >= 1;
+            this.isReady = (data[1] & 4) >= 1;
+            this.isGrindInProgress = (data[1] & 8) >= 1;
+            this.isWaterPumpInProgress = (data[1] & 16) >= 1;
+            this.isCycleComplete = (data[1] & 32) >= 1;
+            this.isHotplateOn = (data[1] & 64) >= 1;
+            this.waterLevel = (data[2] & 15);
+            this.strength = (data[4] & 3);
+            this.cups = (data[5] & 15);
+        });
+    }
+
+    disconnect() {
+        if (!this.isConnected) return;
+
+        this.client.end();
     }
 
     setStrength(strength, callback) {
 
         var strengthAsInt = parseInt(strength);
         if (isNaN(strengthAsInt) || strengthAsInt < 0 || strengthAsInt > 2) {
-            return postErrorToCallback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)", callback);
+            return callback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)");
         }
 
         console.log(`Setting strength to ${strengthAsInt}`);
         var command = new Buffer([Smarter.strengthRequestByte, strengthAsInt, Smarter.messageTerminator]);
-        sendCommand(this.ip, command, callback);
+        this.sendCommand(command, callback);
     }
 
     setCups(cups, callback) {
 
         var cupsAsInt = parseInt(cups);
         if (isNaN(cupsAsInt) || cupsAsInt < 1 || cupsAsInt > 12) {
-            return postErrorToCallback("'cups' must be a number between 1 to 12 inclusive", callback);
+            return callback("'cups' must be a number between 1 to 12 inclusive");
         }
 
         console.log(`Setting cups to ${cupsAsInt}`);
         var command = new Buffer([Smarter.cupsRequestByte, cupsAsInt, Smarter.messageTerminator]);
-        sendCommand(this.ip, command, callback);
+        this.sendCommand(command, callback);
     }
 
-    brewOn(grind, cups, strength, callback) {
+    setGrind(isGrind, callback) {
 
-        var grindAsInt = parseInt(grind);
-        if (isNaN(grindAsInt) || grindAsInt < 0 || grindAsInt > 1) {
-            return postErrorToCallback("'grind' must be 0 (off) or 1 (on)", callback);
+        if (isGrind !== true && isGrind !== false) {
+            return callback("'isGrind' must be true (on) or false (off)");
         }
+
+        if (this.isGrind === isGrind) {
+             return callback();
+        }
+
+        console.log(`Setting grind to ${isGrind}`);
+
+        var command = new Buffer([Smarter.toggleGrindRequestByte, Smarter.messageTerminator]);
+        this.sendCommand(command, callback);
+    }
+
+    brewOn(isGrind, cups, strength, callback) {
+
+        if (isGrind !== true && isGrind !== false) {
+            return callback("'isGrind' must be true (on) or false (off)");
+        }
+        var isGrindAsInt = isGrind ? 1 : 0;
 
         var cupsAsInt = parseInt(cups);
         if (isNaN(cupsAsInt) || cupsAsInt < 1 || cupsAsInt > 12) {
-            return postErrorToCallback("'cups' must be a number between 1 to 12 inclusive", callback);
+            return callback("'cups' must be a number between 1 to 12 inclusive");
         }
 
         var strengthAsInt = parseInt(strength);
         if (isNaN(strengthAsInt) || strengthAsInt < 0 || strengthAsInt > 2) {
-            return postErrorToCallback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)", callback);
+            return callback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)");
         }
 
-        console.log(`Brewing coffee with grind ${grindAsInt}, cups ${cupsAsInt}, strength ${strengthAsInt}`);
-        var command = new Buffer([Smarter.brewOnRequestByte, cupsAsInt, strengthAsInt, 0x5 /*unknown*/, grindAsInt, Smarter.messageTerminator]);
-        sendCommand(this.ip, command, callback);
+        console.log(`Brewing coffee with grind ${isGrindAsInt}, cups ${cupsAsInt}, strength ${strengthAsInt}`);
+        var command = new Buffer([Smarter.brewOnRequestByte, cupsAsInt, strengthAsInt, 0x5 /*unknown*/, isGrindAsInt, Smarter.messageTerminator]);
+        this.sendCommand(command, callback);
     }
 
     brewOnDefault(callback) {
+
         console.log('Brewing coffee with default settings');
         var command = new Buffer([Smarter.brewOnDefaultRequestByte, Smarter.messageTerminator]);
-        sendCommand(this.ip, command, callback);
+        this.sendCommand(command, callback);
     }
 
     brewOff(callback) {
+
         console.log('Stopping coffee brew');
         var command = new Buffer([Smarter.brewOffRequestByte, 0, Smarter.messageTerminator]);
-        sendCommand(this.ip, command, callback);
+        this.sendCommand(command, callback);
     }
 
     hotplateOn(mins, callback) {
+
         var minsAsInt = 5;
         if (mins !== undefined) {
             minsAsInt = parseInt(mins);
             if (isNaN(minsAsInt) || minsAsInt < 1 || minsAsInt > 30) {
-                return postErrorToCallback("'mins' must be a number between 1 to 30 inclusive", callback);
+                return callback("'mins' must be a number between 1 to 30 inclusive");
             }
         }
         console.log(`Turning on hotplate for ${minsAsInt} mins`);
         var command = new Buffer([Smarter.hotplateOnRequestByte, minsAsInt, Smarter.messageTerminator]);
-        sendCommand(this.ip, command, callback);
+        this.sendCommand(command, callback);
     }
 
     hotplateOff(callback) {
+
         console.log('Turning off hotplate');
         var command = new Buffer([Smarter.hotplateOffRequestByte, Smarter.messageTerminator]);
-        sendCommand(this.ip, command, callback);
+        this.sendCommand(command, callback);
+    }
+
+    sendCommand(command, callback) {
+        if (!this.isConnected) {
+            return callback("Not connected");
+        }
+
+        this.client.write(command);
+
+        callback();
+    }
+
+    toStatus() {
+        return {
+            id : this.id,
+            mac : this.mac,
+            ip : this.ip,
+            name : this.name,
+            cups : this.cups,
+            strength : this.strength,
+            isGrind : this.isGrind,
+            isCarafeDetected : this.isCarafeDetected,
+            isReady : this.isReady,
+            isGrindInProgress : this.isGrindInProgress,
+            isWaterPumpInProgress : this.isWaterPumpInProgress,
+            isCycleComplete : this.isCycleComplete,
+            isHotplateOn : this.isHotplateOn,
+            waterLevel : this.waterLevel,
+            isConnected : this.isConnected
+        };
     }
 
     static idFromMac(mac) {

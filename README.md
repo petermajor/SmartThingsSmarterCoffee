@@ -84,13 +84,13 @@ Payload:
 ```
 {
     "cups": 3,
-    "grind": 1,
+    "isGrind": true,
     "strength": 2
 }
 ```
 
 `cups` must be a value between 1 and 12 inclusive.
-`grind` must be 0 (off) or 1 (on).
+`isGrind` must be true (grind) or false (filter).
 `strength` must be 0 (weak), 1 (medium) or 2 (strong).
 
 #### POST /api/device/{id}/brew/off
@@ -99,6 +99,17 @@ Stops brewing if one was in progress.
 
 Payload:
 none
+
+#### POST /api/device/{id}/grind
+
+Sets the machine to 'grind' or 'filter' mode. 
+
+Payload:
+```
+{ "isGrind": true }
+```
+
+`isGrind` must be true (grind) or false (filter).
 
 #### POST /api/device/{id}/hotplate/on
 

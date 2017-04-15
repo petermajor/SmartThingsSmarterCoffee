@@ -3,7 +3,8 @@
 module.exports = {
     port : 2081,
 
-    successReplyByte : 0x3,
+    acknowledgementReplyByte : 0x3,
+    statusReplyByte : 0x32,
     brewOnRequestByte : 0x33,
     brewOffRequestByte : 0x34,
     strengthRequestByte : 0x35,
