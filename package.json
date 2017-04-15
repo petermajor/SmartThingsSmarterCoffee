@@ -13,7 +13,7 @@
     "express": "~4.15.2",
     "body-parser": "~1.17.1",
     "macfromip": "~1.1.1",
-    "node-ssdp": "~3.2.1",
+    "@achingbrain/ssdp": "~2.1.2",
     "jshint": "*"
   },
   "devDependencies": {
