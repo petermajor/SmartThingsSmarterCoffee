@@ -5,7 +5,7 @@
 * __SmartThingsSmarterCoffee__ - A Node.js server that converts REST calls from SmartThings to Smarter Coffee binary packets
 
 ### Notes
-* Tested on Node.js 10.6.2. It may work on other versions.
+* Tested on Node.js 6.10.2. It may work on other versions.
 * Tested on Mac OS and Raspberry Pi Raspian. Should work on Windows, but I haven't tried it.
 * When the server starts, it will discover coffee machine(s) via UDP broadcast. Coffee machine(s) must already be on the same network.
 * To control with SmartThings, you must install a [Smart App](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy) and a [Device Handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy).
@@ -14,6 +14,55 @@
 1. Clone the repository into a folder.
 2. Run `npm install` from the top folder of the clone.
 3. Run `node app.js` from the top folder of the install.
+
+### Raspberry Pi
+
+#### Node.js on Raspberry Pi
+If you're using a Raspberry Pi, the standard Raspian install has a Node "lite" installation. I haven't tested SmartThingsSmarterCoffee on that version of Node.js. I would recommend that you follow [these instructions](http://thisdavej.com/beginners-guide-to-installing-node-js-on-a-raspberry-pi/) to install "proper" Node.js.
+
+The only difference is that I used `https://deb.nodesource.com/setup_6.x` instead of `https://deb.nodesource.com/setup_7.x`, so as to install the stable version of Node.js.
+
+#### Running as a Service 
+
+You can configure SmartThingsSmarterCoffee to run as a service and start after the Pi boots.
+
+First, create the service definition:
+```
+sudo nano /lib/systemd/system/SmartThingsSmarterCoffee.service
+```
+
+Copy and paste this text and save with ctrl-x:
+
+```
+[Unit]
+Description=SmartThingsSmarterCoffee
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node <path to git repo>/app.js
+WorkingDirectory=<path to git repo>
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then run the additional commands:
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable SmartThingsSmarterCoffee.service
+sudo systemctl start SmartThingsSmarterCoffee.service
+sudo systemctl status SmartThingsSmarterCoffee.service
+```
+
+If you want to stop the service (until next reboot):
+```
+sudo systemctl stop SmartThingsSmarterCoffee.service
+```
 
 ### API
 
