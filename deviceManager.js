@@ -1,6 +1,5 @@
 'use strict';
 
-const EventEmitter = require('events').EventEmitter;
 const dgram = require('dgram');
 const os = require('os');
 const macfromip = require('macfromip');
@@ -28,10 +27,9 @@ function getLocalAddresses() {
 
 const localAddresses = getLocalAddresses();
 
-class DeviceManager extends EventEmitter
+class DeviceManager
 {
     constructor() {
-        super();
         this.devices = new Map();
     }
 
@@ -40,6 +38,7 @@ class DeviceManager extends EventEmitter
 
         this.discover();
         this.intervalId = setInterval(() => this.discover(), fiveMinutes);
+        console.log(`Started discovery manager`);
     }
 
     stop() {
@@ -47,6 +46,9 @@ class DeviceManager extends EventEmitter
 
         clearInterval(this.intervalId);
         this.intervalId = null;
+        console.log(`Stopped discovery manager`);
+
+        this.devices.values(device => device.disconnect());
     }
 
     discover() {
@@ -56,7 +58,7 @@ class DeviceManager extends EventEmitter
 
         udpsocket.on('listening', () => {
             var address = udpsocket.address();
-            console.log(`UDP client listening on ${address.address}:${address.port}`);
+            console.log(`Started listening for UDP message on ${address.address}:${address.port}`);
 
             udpsocket.setBroadcast(true);
             var message = new Buffer ([Smarter.discoverRequestByte, Smarter.messageTerminator]);
@@ -65,8 +67,8 @@ class DeviceManager extends EventEmitter
             console.log(`Broadcasted UDP message to ${broadcastAddress}:${Smarter.port}`);
 
             setTimeout(() => {
-                console.log('Closing UDP socket');
                 udpsocket.close();
+                console.log('Stopped listening for UDP messages');
             }, fourSeconds);
         });
 
@@ -95,7 +97,8 @@ class DeviceManager extends EventEmitter
                         console.log(`Device ${mac} is new`);
                         let device = new CoffeeMachine(mac, ip);
                         this.devices.set(device.id, device);
-                        this.emit('discovered', device);
+                        // connect on next cycle
+                        setTimeout(() => device.connect(), 0);
                     }
                 });
             }

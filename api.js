@@ -126,7 +126,13 @@ function sendResult(res, err) {
 
 class Api 
 {
+    constructor() {
+        this.started = false;
+    }
+
     start() {
+        if (this.started) return;
+
         app.use(bodyParser.urlencoded({ extended: true }));
         app.use(bodyParser.json());
 
@@ -145,8 +151,18 @@ class Api
         app.use('/api', router);
 
         app.listen(port);
-        
+
+        this.started = true;
         console.log(`Started API on port ${port}`);
+    }
+
+    stop() {
+        if (!this.started) return;
+
+        app.close();
+        
+        this.started = false;
+        console.log("Stopped API");
     }
 }
 

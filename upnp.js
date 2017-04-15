@@ -2,17 +2,18 @@
 
 const ssdp = require('@achingbrain/ssdp');
 
-const RootUsn = 'upnp:rootdevice';
 const ServerUsn = 'urn:schemas-upnp-org:device:SmartThingsSmarterCoffee:1';
 
 class Upnp
 {
     constructor() {
+        this.started = false;
         this.bus = ssdp();
         this.bus.on('error', console.error);
     }
 
     start() {
+        if (this.started) return;
 
         this.bus.advertise({
             usn: ServerUsn,
@@ -29,15 +30,17 @@ class Upnp
             }
         });
 
-        // stop the server(s) from running - this will also send ssdp:byebye messages for all
-        // advertised services however they'll only have been sent once the callback is
-        // invoked so it won't work with process.on('exit') as you can only perform synchronous
-        // operations there
-        process.on('SIGINT',() => {
-            this.bus.stop(error => {
-                process.exit(error ? 1 : 0);
-            });
-        });
+        this.started = true;
+        console.log(`Started SSDP server for ${ServerUsn}`);
+    }
+
+    stop() {
+        if (!this.started) return;
+
+        this.bus.stop();
+
+        this.started = false;
+        console.log("Stopped SSDP server");
     }
 }
 

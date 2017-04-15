@@ -78,6 +78,7 @@ class CoffeeMachine
         if (!this.isConnected) return;
 
         this.client.end();
+        console.log(`Disconnected from machine ${this.ip}`);
     }
 
     setStrength(strength, callback) {
