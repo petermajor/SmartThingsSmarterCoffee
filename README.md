@@ -37,7 +37,7 @@ Use the SmartThings Graph IDE to install the [Device Handler](https://github.com
     5. Wait a min for the SmartApp to discover your Node.js server and the Coffee Machine via UPnP
     6. Select _Coffee Machine_ and tap the _Done_ button at the top
 
-If the installation completed with errors, you will have a device called _Coffee Machine_ added to your device list.
+If the installation completed without errors, you will have a device called _Coffee Machine_ added to your device list.
 
 You can now use that like any other on/off switch in SmartThings, including control with Amazon Echo or Google Home.
 
