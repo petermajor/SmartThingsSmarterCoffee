@@ -26,7 +26,7 @@ Use the SmartThings Graph IDE to install the [Device Handler](https://github.com
 ### Usage
 1. Clone the SmartThingsSmarterCoffee repository into a folder on your server.
 2. Run `npm install` from the top folder of the clone to install module dependencies.
-3. Run `node app.js` from the top folder of the install.
+3. Run `node app.js` from the top folder of the install to start the app.
 4. Use the SmartThings Graph IDE to install the [Device Handler](https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy).
 5. Use the SmartThings Graph IDE to install the [SmartApp](https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy).
 6. Use the SmartThings mobile app to create an instance of the SmartApp:
