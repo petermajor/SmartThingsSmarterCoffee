@@ -92,6 +92,8 @@ sudo systemctl stop SmartThingsSmarterCoffee.service
 
 ### API
 
+You don't need to know this for the SmartThings integration. But if you're using this API to integration your coffee machine with something else it might be useful...
+
 #### GET /api/device
 
 Map of known coffee machines.
