@@ -112,7 +112,8 @@ Example response:
   "isBrewing": false,
   "waterLevel": 2,
   "isConnected": true
-}```
+}
+```
 
 #### POST /api/device/{id}/cups
 
