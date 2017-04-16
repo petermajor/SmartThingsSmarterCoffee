@@ -7,6 +7,10 @@
     "name": "Peter Major",
     "email": "petermajoruk@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/petermajor/SmartThingsSmarterCoffee.git"
+  },
   "license": "MIT",
   "dependencies": {
     "@achingbrain/ssdp": "~2.1.2",
