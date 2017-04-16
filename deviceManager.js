@@ -48,7 +48,9 @@ class DeviceManager
         this.intervalId = null;
         console.log(`Stopped discovery manager`);
 
-        this.devices.values(device => device.disconnect());
+        for (let device of this.devices.values()) {
+            device.disconnect();
+        }
     }
 
     discover() {

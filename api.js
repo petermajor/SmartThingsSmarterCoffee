@@ -151,7 +151,6 @@ class Api
 
         this.server = app.listen(port);
 
-        this.started = true;
         console.log(`Started API on port ${port}`);
     }
 
@@ -160,6 +159,7 @@ class Api
 
         this.server.close();
         this.server = null;
+        
         console.log("Stopped API");
     }
 }

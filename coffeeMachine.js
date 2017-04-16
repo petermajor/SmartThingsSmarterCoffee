@@ -44,7 +44,7 @@ class CoffeeMachine
 
         this.client.on('end', () => {
             this.isConnected = false;
-            console.log(`Disconnecting from machine ${this.ip}`);
+            console.log(`Disconnected from machine ${this.ip}`);
          });
 
         this.client.on('data', (data) => {
@@ -77,8 +77,8 @@ class CoffeeMachine
     disconnect() {
         if (!this.isConnected) return;
 
+        console.log(`Disconnecting from machine ${this.ip}`);
         this.client.end();
-        console.log(`Disconnected from machine ${this.ip}`);
     }
 
     setStrength(strength, callback) {
