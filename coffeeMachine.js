@@ -199,6 +199,10 @@ class CoffeeMachine
         callback();
     }
 
+    addSubscription(subscriptionId, timeout, callbackUrl) {
+
+    }
+
     toStatus() {
         return {
             id : this.id,

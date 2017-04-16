@@ -19,6 +19,7 @@
     "express": "~4.15.2",
     "jshint": "*",
     "macfromip": "~1.1.1",
+    "uuid": "^3.0.1",
     "winston": "^2.3.1"
   },
   "devDependencies": {}

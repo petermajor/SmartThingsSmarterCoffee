@@ -5,6 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const deviceManager = require('./deviceManager.js');
 const winston = require('winston');
+const uuid = require('uuid');
 
 const port = 2080;
 
@@ -14,11 +15,51 @@ function getDevice(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
     res.json(device.toStatus());
+}
+
+function subscribeDevice(req, res) {
+
+    var id = req.params.id;
+
+    var device = deviceManager.devices.get(id);
+    if (!device) {
+        res.setStatus(404);
+        return;
+    }
+
+    var subscriptionIdWithPrefix = req.get('SID');
+    var subscriptionId = "";
+    if (subscriptionIdWithPrefix === undefined) {
+         subscriptionId = uuid();
+    } else if (timeoutWithPrefix.startsWith('uuid:')) {
+        subscriptionId = subscriptionIdWithPrefix.replace('uuid:', '').trim();
+    } else {
+        res.status(400).send("SID header must be of format 'uuid:{sid}'");
+        return;
+    }
+
+    var timeoutWithPrefix = req.get('TIMEOUT');
+    if (timeoutWithPrefix === undefined || !timeoutWithPrefix.startsWith('Second-')) {
+        res.status(400).send("TIMEOUT must be specified and in format 'Second-{val}'");
+        return;
+    }
+    var timeout = parseInt(timeoutWithPrefix.replace('Second-', '').trim());
+
+    var callbackWithPrefix = req.get('CALLBACK');
+    if (callbackWithPrefix === undefined || !callbackWithPrefix.startsWith('<') || !callbackWithPrefix.endsWith('>')) {
+        res.status(400).send("CALLBACK must be specified and in format '<{url}>'");
+        return;
+    }
+    var callback = callbackWithPrefix.substring(1, callbackWithPrefix.length-1).trim();
+
+    device.addSubscription(subscriptionId, timeout, callback);
+
+    res.set({'SID': subscriptionId}).status(200).send();
 }
 
 function getDevices(req, res) {
@@ -34,7 +75,7 @@ function setStrength(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
@@ -46,7 +87,7 @@ function setCups(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
@@ -58,7 +99,7 @@ function setGrind(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
@@ -70,7 +111,7 @@ function setBrewOn(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
@@ -86,7 +127,7 @@ function setBrewOff(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
@@ -98,7 +139,7 @@ function setHotplateOn(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
@@ -110,7 +151,7 @@ function setHotplateOff(req, res) {
 
     var device = deviceManager.devices.get(id);
     if (!device) {
-        res.status(404).send();
+        res.setStatus(404);
         return;
     }
 
@@ -140,6 +181,7 @@ class Api
 
         router.get('/device', getDevices);
         router.get('/device/:id', getDevice);
+        router.subscribe('/device/:id', subscribeDevice);
         router.post('/device/:id/strength', setStrength);
         router.post('/device/:id/cups', setCups);
         router.post('/device/:id/grind', setGrind);
