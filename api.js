@@ -127,11 +127,10 @@ function sendResult(res, err) {
 class Api 
 {
     constructor() {
-        this.started = false;
     }
 
     start() {
-        if (this.started) return;
+        if (this.server) return;
 
         app.use(bodyParser.urlencoded({ extended: true }));
         app.use(bodyParser.json());
@@ -150,18 +149,17 @@ class Api
 
         app.use('/api', router);
 
-        app.listen(port);
+        this.server = app.listen(port);
 
         this.started = true;
         console.log(`Started API on port ${port}`);
     }
 
     stop() {
-        if (!this.started) return;
+        if (!this.server) return;
 
-        app.close();
-        
-        this.started = false;
+        this.server.close();
+        this.server = null;
         console.log("Stopped API");
     }
 }
