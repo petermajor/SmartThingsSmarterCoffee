@@ -4,6 +4,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const deviceManager = require('./deviceManager.js');
+const winston = require('winston');
 
 const port = 2080;
 
@@ -151,7 +152,7 @@ class Api
 
         this.server = app.listen(port);
 
-        console.log(`Started API on port ${port}`);
+        winston.info('Started API on port %s', port);
     }
 
     stop() {
@@ -160,7 +161,7 @@ class Api
         this.server.close();
         this.server = null;
         
-        console.log("Stopped API");
+        winston.info('Stopped API');
     }
 }
 

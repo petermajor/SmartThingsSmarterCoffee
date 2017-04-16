@@ -2,6 +2,7 @@
 
 const net = require('net');
 const Smarter = require('./smarter.js');
+const winston = require('winston');
 
 class CoffeeMachine
 {
@@ -29,55 +30,65 @@ class CoffeeMachine
     connect() {
         if (this.isConnected) return;
 
-        console.log(`Connecting to machine ${this.ip}`);
+        winston.info('Connecting to machine %s', this.ip);
         this.client = net.createConnection({ port:Smarter.port, host:this.ip });
 
         this.client.on('connect', () => {
-            console.log(`Connected to machine ${this.ip}`);
+            winston.info('Connected to machine %s', this.ip);
             this.isConnected = true;
         });
 
-        // this.client.on('error', (error) => {
-        //     console.log(`Error ${error}`);
-        //     // TODO
-        // });
+        this.client.on('error', (error) => {
+            winston.error('Error in stream from machine %s, %s', this.ip, error);
+            // TODO
+        });
 
         this.client.on('end', () => {
             this.isConnected = false;
-            console.log(`Disconnected from machine ${this.ip}`);
+            winston.info('Disconnected from machine %s', this.ip);
          });
 
         this.client.on('data', (data) => {
 
-            if (!data || data.length === 0 || data[0] !== Smarter.statusReplyByte)
+            if (!data || data.length === 0)
                 return;
-            console.log(`Received status message from machine ${this.ip} - ${data.join(',')}`);
 
-            // not sure what isReady is... don't think it's "machine is ready to brew"
-            // it might be "you're coffee is ready" as it doesn't stay set that long
-            //this.isReady = (data[1] & 4) >= 1;
-            // not useful
-            //this.isCycleComplete = (data[1] & 32) >= 1;
+            if (data[0] === Smarter.acknowledgementReplyByte)
+            {
+                winston.info('Received acknowledgement message from machine %s - %s', this.ip, data.join(','));
+                return;
+            }
+            
+            if (data[0] === Smarter.statusReplyByte)
+            {
+                winston.info('Received status message from machine %s - %s', this.ip, data.join(','));
 
-            // combine these two properties into something more useful
-            let isGrindInProgress = (data[1] & 8) >= 1;
-            let isWaterPumpInProgress = (data[1] & 16) >= 1;
-            this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
+                // not sure what isReady is... don't think it's "machine is ready to brew"
+                // it might be "you're coffee is ready" as it doesn't stay set that long
+                //this.isReady = (data[1] & 4) >= 1;
+                // not useful
+                //this.isCycleComplete = (data[1] & 32) >= 1;
 
-            this.isCarafeDetected = (data[1] & 1) >= 1;
-            this.isGrind = (data[1] & 2) >= 1;
-            this.isHotplateOn = (data[1] & 64) >= 1;
-            this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
-            this.waterLevel = (data[2] & 15);
-            this.strength = (data[4] & 3);
-            this.cups = (data[5] & 15);
+                // combine these two properties into something more useful
+                let isGrindInProgress = (data[1] & 8) >= 1;
+                let isWaterPumpInProgress = (data[1] & 16) >= 1;
+                this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
+
+                this.isCarafeDetected = (data[1] & 1) >= 1;
+                this.isGrind = (data[1] & 2) >= 1;
+                this.isHotplateOn = (data[1] & 64) >= 1;
+                this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
+                this.waterLevel = (data[2] & 15);
+                this.strength = (data[4] & 3);
+                this.cups = (data[5] & 15);
+            }
         });
     }
 
     disconnect() {
         if (!this.isConnected) return;
 
-        console.log(`Disconnecting from machine ${this.ip}`);
+        winston.info('Disconnecting from machine %s', this.ip);
         this.client.end();
     }
 
@@ -88,7 +99,7 @@ class CoffeeMachine
             return callback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)");
         }
 
-        console.log(`Setting strength to ${strengthAsInt}`);
+        winston.info('Setting strength to %s', strengthAsInt);
         var command = new Buffer([Smarter.strengthRequestByte, strengthAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
@@ -100,7 +111,7 @@ class CoffeeMachine
             return callback("'cups' must be a number between 1 to 12 inclusive");
         }
 
-        console.log(`Setting cups to ${cupsAsInt}`);
+        winston.info('Setting cups to %s', cupsAsInt);
         var command = new Buffer([Smarter.cupsRequestByte, cupsAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
@@ -115,7 +126,7 @@ class CoffeeMachine
              return callback();
         }
 
-        console.log(`Setting grind to ${isGrind}`);
+        winston.info('Setting grind to %s', isGrind);
 
         var command = new Buffer([Smarter.toggleGrindRequestByte, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
@@ -138,21 +149,21 @@ class CoffeeMachine
             return callback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)");
         }
 
-        console.log(`Brewing coffee with grind ${isGrindAsInt}, cups ${cupsAsInt}, strength ${strengthAsInt}`);
+        winston.info('Brewing coffee with grind %s, cups %s, strength %s', isGrindAsInt, cupsAsInt, strengthAsInt);
         var command = new Buffer([Smarter.brewOnRequestByte, cupsAsInt, strengthAsInt, 0x5 /*unknown*/, isGrindAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
     brewOnDefault(callback) {
 
-        console.log('Brewing coffee with default settings');
+        winston.info('Brewing coffee with default settings');
         var command = new Buffer([Smarter.brewOnDefaultRequestByte, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
     brewOff(callback) {
 
-        console.log('Stopping coffee brew');
+        winston.info('Stopping coffee brew');
         var command = new Buffer([Smarter.brewOffRequestByte, 0, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
@@ -166,14 +177,14 @@ class CoffeeMachine
                 return callback("'mins' must be a number between 1 to 30 inclusive");
             }
         }
-        console.log(`Turning on hotplate for ${minsAsInt} mins`);
+        winston.info('Turning on hotplate for %s mins', minsAsInt);
         var command = new Buffer([Smarter.hotplateOnRequestByte, minsAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
     hotplateOff(callback) {
 
-        console.log('Turning off hotplate');
+        winston.info('Turning off hotplate');
         var command = new Buffer([Smarter.hotplateOffRequestByte, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }

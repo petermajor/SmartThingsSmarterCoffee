@@ -9,13 +9,13 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@achingbrain/ssdp": "~2.1.2",
+    "body-parser": "~1.17.1",
     "debug": "~2.6.3",
     "express": "~4.15.2",
-    "body-parser": "~1.17.1",
+    "jshint": "*",
     "macfromip": "~1.1.1",
-    "@achingbrain/ssdp": "~2.1.2",
-    "jshint": "*"
+    "winston": "^2.3.1"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }

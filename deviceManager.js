@@ -5,6 +5,7 @@ const os = require('os');
 const macfromip = require('macfromip');
 const CoffeeMachine = require('./coffeeMachine.js');
 const Smarter = require('./smarter.js');
+const winston = require('winston');
 
 const fourSeconds = 4 * 1000;
 const fiveMinutes = 5 * 60 * 1000;
@@ -38,7 +39,7 @@ class DeviceManager
 
         this.discover();
         this.intervalId = setInterval(() => this.discover(), fiveMinutes);
-        console.log(`Started discovery manager`);
+        winston.info('Started discovery manager');
     }
 
     stop() {
@@ -46,7 +47,7 @@ class DeviceManager
 
         clearInterval(this.intervalId);
         this.intervalId = null;
-        console.log(`Stopped discovery manager`);
+        winston.info('Stopped discovery manager');
 
         for (let device of this.devices.values()) {
             device.disconnect();
@@ -55,22 +56,22 @@ class DeviceManager
 
     discover() {
 
-        console.log('Starting coffee machine discovery');
+        winston.info('Starting coffee machine discovery');
         var udpsocket = dgram.createSocket('udp4');
 
         udpsocket.on('listening', () => {
             var address = udpsocket.address();
-            console.log(`Started listening for UDP message on ${address.address}:${address.port}`);
+            winston.info('Started listening for UDP message on %s:%s', address.address, address.port);
 
             udpsocket.setBroadcast(true);
             var message = new Buffer ([Smarter.discoverRequestByte, Smarter.messageTerminator]);
 
             udpsocket.send(message, 0, message.length, Smarter.port, broadcastAddress);
-            console.log(`Broadcasted UDP message to ${broadcastAddress}:${Smarter.port}`);
+            winston.info('Broadcasted UDP message to  %s:%s', broadcastAddress, Smarter.port);
 
             setTimeout(() => {
                 udpsocket.close();
-                console.log('Stopped listening for UDP messages');
+                winston.info('Stopped listening for UDP messages');
             }, fourSeconds);
         });
 
@@ -80,23 +81,23 @@ class DeviceManager
             if (message.length >= 4 && message[0] == Smarter.discoverReplyByte && message[1] == Smarter.coffeeDeviceType && message[3] == Smarter.messageTerminator) {
                     
                 let ip = remote.address;
-                console.log(`Response received from ${ip}`);
+                winston.info('Response received from %s', ip);
                 
                 macfromip.getMac(ip, (err, mac) => {
                     if(err){
-                        console.log(`Error getting mac address for address ${ip}`);
+                        winston.info('Error getting mac address for address %s', ip);
                         return;
                     }
                     
-                    console.log(`Resolved ${ip} to ${mac}`);
+                    winston.info('Resolved %s to %s', ip, mac);
 
                     var id = CoffeeMachine.idFromMac(mac);
                     if (this.devices.has(id)) {
-                        console.log(`Device ${mac} already known`);
+                        winston.info('Device %s already known', mac);
                         let device = this.devices.get(id);
                         device.updateIp(ip);
                     } else {
-                        console.log(`Device ${mac} is new`);
+                        winston.info('Device %s is new', mac);
                         let device = new CoffeeMachine(mac, ip);
                         this.devices.set(device.id, device);
                         // connect on next cycle
