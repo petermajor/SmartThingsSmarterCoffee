@@ -33,14 +33,7 @@ function subscribeDevice(req, res) {
     }
 
     const subscriptionIdWithPrefix = req.get('SID');
-    var subscriptionId = "";
-    if (subscriptionIdWithPrefix === undefined) {
-        let id = uuid();
-        subscriptionId = `uuid:${id}`;
-    } else if (!subscriptionIdWithPrefix.startsWith('uuid:')) {
-        res.status(400).send("SID header must be of format 'uuid:{sid}'");
-        return;
-    }
+    const subscriptionId = subscriptionIdWithPrefix !== undefined ? subscriptionIdWithPrefix : uuid();
 
     const timeoutWithPrefix = req.get('TIMEOUT');
     if (timeoutWithPrefix === undefined || !timeoutWithPrefix.startsWith('Second-')) {
