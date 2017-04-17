@@ -1,6 +1,8 @@
 'use strict';
 
 const net = require('net');
+const http = require('http');
+const url = require('url');
 const Smarter = require('./smarter.js');
 const winston = require('winston');
 
@@ -227,7 +229,7 @@ class CoffeeMachine
 
         var schedule = s => setTimeout(() => this.doSubscriptionCallback(s), 0);
 
-        for (let subscription in this.subscriptions.values()) {
+        for (let subscription of this.subscriptions.values()) {
             if (subscription.expiry >= now) {
                 winston.info('Scheduling callback to subscription %s', subscription.subscriptionId);
                 schedule(subscription);
@@ -238,7 +240,30 @@ class CoffeeMachine
     doSubscriptionCallback(subscription) {
         winston.info('Sending callback to subscription %s', subscription.subscriptionId);
 
-        // TODO
+        const uri = url.parse(subscription.callbackUrl);
+
+        const options = {
+            "host": uri.hostname,
+            "port": uri.port,
+            "path": uri.path,
+            "method": "POST",
+            "headers": { 
+                "SID" : subscription.subscriptionId,
+                "Content-Type" : "application/json",
+            }
+        };
+
+        const d = this.toApiDevice();
+        const body = JSON.stringify(d);
+        var request = http.request(options, res => {
+            winston.info('Callback to subscription %s status code %s', subscription.subscriptionId, res.statusCode);
+        });
+
+        request.on('error', (e) => {
+            winston.info('Callback to subscription %s failed with error %s', subscription.subscriptionId, e);
+        });
+
+        request.end(body);        
     }
 
     toApiDevice() {
