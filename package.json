@@ -1,7 +1,7 @@
 {
   "name": "smartercoffee.js",
   "version": "1.0.0",
-  "description": "A REST API facade for Smarter coffee machines",
+  "description": "An HTTP API for Smarter coffee machines",
   "main": "app.js",
   "author": {
     "name": "Peter Major",
