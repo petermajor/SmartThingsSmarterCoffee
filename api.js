@@ -19,45 +19,47 @@ function getDevice(req, res) {
         return;
     }
 
-    res.json(device.toStatus());
+    res.json(device.toApiDevice());
 }
 
 function subscribeDevice(req, res) {
 
-    var id = req.params.id;
+    const id = req.params.id;
 
-    var device = deviceManager.devices.get(id);
+    const device = deviceManager.devices.get(id);
     if (!device) {
         res.setStatus(404);
         return;
     }
 
-    var subscriptionIdWithPrefix = req.get('SID');
+    const subscriptionIdWithPrefix = req.get('SID');
     var subscriptionId = "";
     if (subscriptionIdWithPrefix === undefined) {
          subscriptionId = uuid();
-    } else if (timeoutWithPrefix.startsWith('uuid:')) {
+    } else if (subscriptionIdWithPrefix.startsWith('uuid:')) {
         subscriptionId = subscriptionIdWithPrefix.replace('uuid:', '').trim();
     } else {
         res.status(400).send("SID header must be of format 'uuid:{sid}'");
         return;
     }
 
-    var timeoutWithPrefix = req.get('TIMEOUT');
+    const timeoutWithPrefix = req.get('TIMEOUT');
     if (timeoutWithPrefix === undefined || !timeoutWithPrefix.startsWith('Second-')) {
         res.status(400).send("TIMEOUT must be specified and in format 'Second-{val}'");
         return;
     }
-    var timeout = parseInt(timeoutWithPrefix.replace('Second-', '').trim());
+    const timeout = parseInt(timeoutWithPrefix.replace('Second-', '').trim());
+    const timeoutInMs = timeout * 1000;
 
-    var callbackWithPrefix = req.get('CALLBACK');
+    const callbackWithPrefix = req.get('CALLBACK');
     if (callbackWithPrefix === undefined || !callbackWithPrefix.startsWith('<') || !callbackWithPrefix.endsWith('>')) {
         res.status(400).send("CALLBACK must be specified and in format '<{url}>'");
         return;
     }
-    var callback = callbackWithPrefix.substring(1, callbackWithPrefix.length-1).trim();
+    const callback = callbackWithPrefix.substring(1, callbackWithPrefix.length-1).trim();
 
-    device.addSubscription(subscriptionId, timeout, callback);
+    winston.info('Adding subscription %s with timeout %s for %s', subscriptionId, timeoutInMs, callback);
+    device.addSubscription(subscriptionId, timeoutInMs, callback);
 
     res.set({'SID': subscriptionId}).status(200).send();
 }
@@ -65,7 +67,7 @@ function subscribeDevice(req, res) {
 function getDevices(req, res) {
     var obj = {};
     for (const entry of deviceManager.devices) {
-        obj[entry[0]] = entry[1].toStatus();
+        obj[entry[0]] = entry[1].toApiDevice();
     }
     res.json(obj);
 }

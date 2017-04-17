@@ -106,17 +106,20 @@ Example response:
     "mac": "18:fe:34:f8:69:75",
     "ip": "192.168.1.15",
     "name": "Coffee Machine",
-    "cups": 3,
-    "strength": 0,
-    "isGrind": false,
-    "isCarafeDetected": true,
-    "isHotplateOn": true,
-    "isBrewing": false,
-    "waterLevel": 2,
-    "isConnected": true
+    "status": {
+      "isBrewing": false,
+      "isCarafeDetected": false,
+      "isGrind": true,
+      "isHotplateOn": false,
+      "waterLevel": 2,
+      "strength": 0,
+      "cups": 5
+    }
   }
 }
 ```
+
+Note `status` can be null if the the device endpoint is called before the device status can be queried.
 
 The server supports more than one machine on the network.
 Use the `id` property to identify which machine you would like to preform operation for.
@@ -132,16 +135,19 @@ Example response:
   "mac": "18:fe:34:f8:69:75",
   "ip": "192.168.1.15",
   "name": "Coffee Machine",
-  "cups": 3,
-  "strength": 0,
-  "isGrind": false,
-  "isCarafeDetected": true,
-  "isHotplateOn": true,
-  "isBrewing": false,
-  "waterLevel": 2,
-  "isConnected": true
+  "status": {
+    "isBrewing": false,
+    "isCarafeDetected": false,
+    "isGrind": true,
+    "isHotplateOn": false,
+    "waterLevel": 2,
+    "strength": 0,
+    "cups": 5
+  }
 }
 ```
+
+Note `status` can be null if the the device endpoint is called before the device status can be queried.
 
 #### POST /api/device/{id}/cups
 

@@ -11,14 +11,9 @@ class CoffeeMachine
         this.mac = mac;
         this.ip = ip;
         this.name = "Coffee Machine";
-        this.cups = null;
-        this.strength = null;
-        this.grind = null;
-        this.isCarafeDetected = null;
-        this.isHotplateOn = null;
-        this.isBrewing = null;
-        this.waterLevel = null;
+        this.status = null;
         this.isConnected = false;
+        this.subscriptions = new Map();
     }
 
     updateIp(ip) {
@@ -72,15 +67,21 @@ class CoffeeMachine
                 // combine these two properties into something more useful
                 let isGrindInProgress = (data[1] & 8) >= 1;
                 let isWaterPumpInProgress = (data[1] & 16) >= 1;
-                this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
 
-                this.isCarafeDetected = (data[1] & 1) >= 1;
-                this.isGrind = (data[1] & 2) >= 1;
-                this.isHotplateOn = (data[1] & 64) >= 1;
-                this.isBrewing = isGrindInProgress || isWaterPumpInProgress;
-                this.waterLevel = (data[2] & 15);
-                this.strength = (data[4] & 3);
-                this.cups = (data[5] & 15);
+                let newstatus = 
+                {
+                    isBrewing : isGrindInProgress || isWaterPumpInProgress,
+                    isCarafeDetected : (data[1] & 1) >= 1,
+                    isGrind : (data[1] & 2) >= 1,
+                    isHotplateOn : (data[1] & 64) >= 1,
+                    waterLevel : (data[2] & 15),
+                    strength : (data[4] & 3),
+                    cups : (data[5] & 15)
+                };
+
+                this.scheduleSubscriptionCallbackIfStatusChanged(newstatus);
+
+                this.status = newstatus;
             }
         });
     }
@@ -122,7 +123,7 @@ class CoffeeMachine
             return callback("'isGrind' must be true (on) or false (off)");
         }
 
-        if (this.isGrind === isGrind) {
+        if (this.status.isGrind === isGrind) {
              return callback();
         }
 
@@ -199,24 +200,54 @@ class CoffeeMachine
         callback();
     }
 
-    addSubscription(subscriptionId, timeout, callbackUrl) {
+    addSubscription(subscriptionId, timeoutInMs, callbackUrl) {
 
+        var expiry = Date.now() + timeoutInMs;
+
+        var obj = { subscriptionId, expiry, callbackUrl };
+
+        this.subscriptions.set(subscriptionId, obj);
     }
 
-    toStatus() {
+    scheduleSubscriptionCallbackIfStatusChanged(s) {
+        const status = this.status;
+        if (status !== null &&
+            status.isBrewing === s.isBrewing &&
+            status.isCarafeDetected === s.isCarafeDetected &&
+            status.isGrind === s.isGrind &&
+            status.isHotplateOn === s.isHotplateOn &&
+            status.waterLevel === s.waterLevel &&
+            status.strength === s.strength &&
+            status.cups === s.cups)
+            return;
+
+        winston.info('Status has changed, preparing subscription callbacks');
+
+        var now = Date.now();
+
+        var schedule = s => setTimeout(() => this.doSubscriptionCallback(s), 0);
+
+        for (let subscription in this.subscriptions.values()) {
+            if (subscription.expiry >= now) {
+                winston.info('Scheduling callback to subscription %s', subscription.subscriptionId);
+                schedule(subscription);
+            }
+        }
+    }
+
+    doSubscriptionCallback(subscription) {
+        winston.info('Sending callback to subscription %s', subscription.subscriptionId);
+
+        // TODO
+    }
+
+    toApiDevice() {
         return {
             id : this.id,
             mac : this.mac,
             ip : this.ip,
             name : this.name,
-            cups : this.cups,
-            strength : this.strength,
-            isGrind : this.isGrind,
-            isCarafeDetected : this.isCarafeDetected,
-            isHotplateOn : this.isHotplateOn,
-            isBrewing : this.isBrewing,
-            waterLevel : this.waterLevel,
-            isConnected : this.isConnected
+            status : this.status
         };
     }
 
