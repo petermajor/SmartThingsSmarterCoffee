@@ -35,7 +35,8 @@ function subscribeDevice(req, res) {
     const subscriptionIdWithPrefix = req.get('SID');
     var subscriptionId = "";
     if (subscriptionIdWithPrefix === undefined) {
-         subscriptionId = `uuid:${uuid()}`;
+        let id = uuid();
+        subscriptionId = `uuid:${id}`;
     } else if (!subscriptionIdWithPrefix.startsWith('uuid:')) {
         res.status(400).send("SID header must be of format 'uuid:{sid}'");
         return;
