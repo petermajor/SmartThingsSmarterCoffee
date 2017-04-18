@@ -30,6 +30,11 @@ class CoffeeMachine
         winston.info('Connecting to machine %s', this.ip);
         this.client = net.createConnection({ port:Smarter.port, host:this.ip });
 
+        this.client.on('lookup', (err, address, family, host) => {
+            winston.warning('Lookup %s %s %s %s', err, address, family, host);
+            // TODO
+        });
+
         this.client.on('connect', () => {
             winston.info('Connected to machine %s', this.ip);
             this.isConnected = true;
@@ -37,6 +42,11 @@ class CoffeeMachine
 
         this.client.on('error', (error) => {
             winston.error('Error in stream from machine %s, %s', this.ip, error);
+            // TODO
+        });
+
+        this.client.on('timeout', () => {
+            winston.warning('Timeout');
             // TODO
         });
 
