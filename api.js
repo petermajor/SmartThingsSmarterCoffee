@@ -152,11 +152,15 @@ function setHotplateOff(req, res) {
     device.hotplateOff(err => sendResult(res, err));
 }
 
+// send 202 (Accepted) for non-error result
+// indicates that the binary packets were sent to the machine
+// but we don't wait for a response from the machine
+// we'll call subscription callbacks on error
 function sendResult(res, err) {
     if (err) {
         res.status(400).send(err);
     } else {
-        res.status(200).send();
+        res.status(202).send();
     }
 }
 
