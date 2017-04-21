@@ -5,7 +5,7 @@
 * __SmartThingsSmarterCoffee__ - A Node.js server that converts REST calls from SmartThings to Smarter Coffee binary packets
 
 ### Notes
-* Tested on Node.js 6.10.2. It may work on other versions.
+* Tested on Node.js 7.9.0. It may work on other versions.
 * Tested on Mac OS and Raspberry Pi Raspian. Should work on Windows, but I haven't tried it.
 * When the server starts, it will discover coffee machine(s) via UDP broadcast. Coffee machine(s) must already be on the same network.
 * I'm not sure what will happen if you try to control the machine with the Smarter official app and SmartThings integration at the same time. I never use the official app, it doesn't work on my Android phone.
@@ -50,9 +50,7 @@ NOTE: Do not remote the Smarter Manager app after setup. Doing so will also remo
 ### Raspberry Pi
 
 #### Node.js on Raspberry Pi
-If you're using a Raspberry Pi, the standard Raspian install has a Node "lite" installation. I haven't tested SmartThingsSmarterCoffee on that version of Node.js. I would recommend that you follow [these instructions](http://thisdavej.com/beginners-guide-to-installing-node-js-on-a-raspberry-pi/) to install "proper" Node.js.
-
-The only difference is that I used `https://deb.nodesource.com/setup_6.x` instead of `https://deb.nodesource.com/setup_7.x`, so as to install the stable version of Node.js.
+If you're using a Raspberry Pi, the standard Raspian install has a really, really, really old version of Node installed. I haven't tested SmartThingsSmarterCoffee on that version of Node.js. I would recommend that you follow [these instructions](http://thisdavej.com/beginners-guide-to-installing-node-js-on-a-raspberry-pi/) to install the latest version Node.js.
 
 #### Running as a Service 
 
