@@ -63,6 +63,10 @@ class CoffeeMachine
             if (data[0] === Smarter.acknowledgementReplyByte)
             {
                 winston.info('Received acknowledgement message from machine %s - %s', this.ip, data.join(','));
+
+                // TODO check for error
+                // if error, do callback with error message
+
                 return;
             }
             
@@ -71,10 +75,10 @@ class CoffeeMachine
                 winston.info('Received status message from machine %s - %s', this.ip, data.join(','));
 
                 // not sure what isReady is... don't think it's "machine is ready to brew"
-                // it might be "you're coffee is ready" as it doesn't stay set that long
-                //this.isReady = (data[1] & 4) >= 1;
+                // it might be "your coffee is ready" as it doesn't stay set that long
+                // this.isReady = (data[1] & 4) >= 1;
                 // not useful
-                //this.isCycleComplete = (data[1] & 32) >= 1;
+                // this.isCycleComplete = (data[1] & 32) >= 1;
 
                 // combine these two properties into something more useful
                 let isGrindInProgress = (data[1] & 8) >= 1;
@@ -263,8 +267,8 @@ class CoffeeMachine
             }
         };
 
-        const d = this.toApiDevice();
-        const body = JSON.stringify(d);
+        const r = { id: this.id, status: this.status };
+        const body = JSON.stringify(r);
         var request = http.request(options, res => {
             winston.info('Callback to subscription %s status code %s', subscription.subscriptionId, res.statusCode);
         });
