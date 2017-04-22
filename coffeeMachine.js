@@ -6,6 +6,47 @@ const url = require('url');
 const Smarter = require('./smarter.js');
 const winston = require('winston');
 
+function scheduleCallback(subscriptions, payload) {
+
+    const now = Date.now();
+    const schedule = sub => setTimeout(() => doCallback(sub, payload), 0);
+    for (let subscription of subscriptions.values()) {
+        if (subscription.expiry >= now) {
+            winston.info('Scheduling callback for subscription %s', subscription.subscriptionId);
+            schedule(subscription);
+        }
+    }
+}
+
+function doCallback(subscription, payload) {
+    winston.info('Executing callback for subscription %s', subscription.subscriptionId);
+
+    const uri = url.parse(subscription.callbackUrl);
+
+    const options = {
+        "host": uri.hostname,
+        "port": uri.port,
+        "path": uri.path,
+        "method": "POST",
+        "headers": { 
+            "SID" : subscription.subscriptionId,
+            "Content-Type" : "application/json",
+        }
+    };
+
+    const body = JSON.stringify(payload);
+    const request = http.request(options, res => {
+        winston.info('Callback to subscription %s status code %s', subscription.subscriptionId, res.statusCode);
+    });
+
+    request.on('error', (e) => {
+        winston.info('Callback to subscription %s failed with error %s', subscription.subscriptionId, e);
+    });
+
+    request.end(body);        
+}
+
+
 class CoffeeMachine
 {
     constructor(mac, ip) {
@@ -19,9 +60,9 @@ class CoffeeMachine
     }
 
     updateIp(ip) {
-        if (ip === this.ip) return;
+        if (this.ip === ip) return;
         this.ip = ip;
-        // TODO disconnect and reconnect
+        // TODO disconnect and reconnect?
     }
 
     connect() {
@@ -64,13 +105,18 @@ class CoffeeMachine
             {
                 winston.info('Received acknowledgement message from machine %s - %s', this.ip, data.join(','));
 
-                // TODO check for error
-                // if error, do callback with error message
-
-                return;
+                if (data[1] === Smarter.acknowledgementSuccessByte) {
+                    // do nothing
+                }
+                if (data[1] === Smarter.acknowledgementNoCarafeByte) {
+ 
+                    winston.info('Preparing error subscription callbacks');
+                    const payload = { id: this.id, error: 'No carafe' };
+                    scheduleCallback(this.subscriptions, payload);
+                }
             }
             
-            if (data[0] === Smarter.statusReplyByte)
+            else if (data[0] === Smarter.statusReplyByte)
             {
                 winston.info('Received status message from machine %s - %s', this.ip, data.join(','));
 
@@ -81,11 +127,12 @@ class CoffeeMachine
                 // this.isCycleComplete = (data[1] & 32) >= 1;
 
                 // combine these two properties into something more useful
-                let isGrindInProgress = (data[1] & 8) >= 1;
-                let isWaterPumpInProgress = (data[1] & 16) >= 1;
+                const isGrindInProgress = (data[1] & 8) >= 1;
+                const isWaterPumpInProgress = (data[1] & 16) >= 1;
 
-                let newstatus = 
-                {
+                const oldstatus = this.status;
+
+                this.status = {
                     isBrewing : isGrindInProgress || isWaterPumpInProgress,
                     isCarafeDetected : (data[1] & 1) >= 1,
                     isGrind : (data[1] & 2) >= 1,
@@ -93,11 +140,23 @@ class CoffeeMachine
                     waterLevel : (data[2] & 15),
                     strength : (data[4] & 3),
                     cups : (data[5] & 15)
-                };
+                 };
 
-                this.scheduleSubscriptionCallbackIfStatusChanged(newstatus);
+                if (oldstatus !== null &&
+                    oldstatus.isBrewing === this.status.isBrewing &&
+                    oldstatus.isCarafeDetected === this.status.isCarafeDetected &&
+                    oldstatus.isGrind === this.status.isGrind &&
+                    oldstatus.isHotplateOn === this.status.isHotplateOn &&
+                    oldstatus.waterLevel === this.status.waterLevel &&
+                    oldstatus.strength === this.status.strength &&
+                    oldstatus.cups === this.status.cups)
+                    return;
 
-                this.status = newstatus;
+                winston.info('Status has changed, preparing status subscription callbacks');
+
+                const payload = { id: this.id, status: this.status };
+
+                scheduleCallback(this.subscriptions, payload);
             }
         });
     }
@@ -111,25 +170,25 @@ class CoffeeMachine
 
     setStrength(strength, callback) {
 
-        var strengthAsInt = parseInt(strength);
+        const strengthAsInt = parseInt(strength);
         if (isNaN(strengthAsInt) || strengthAsInt < 0 || strengthAsInt > 2) {
             return callback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)");
         }
 
         winston.info('Setting strength to %s', strengthAsInt);
-        var command = new Buffer([Smarter.strengthRequestByte, strengthAsInt, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.strengthRequestByte, strengthAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
     setCups(cups, callback) {
 
-        var cupsAsInt = parseInt(cups);
+        const cupsAsInt = parseInt(cups);
         if (isNaN(cupsAsInt) || cupsAsInt < 1 || cupsAsInt > 12) {
             return callback("'cups' must be a number between 1 to 12 inclusive");
         }
 
         winston.info('Setting cups to %s', cupsAsInt);
-        var command = new Buffer([Smarter.cupsRequestByte, cupsAsInt, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.cupsRequestByte, cupsAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
@@ -145,7 +204,7 @@ class CoffeeMachine
 
         winston.info('Setting grind to %s', isGrind);
 
-        var command = new Buffer([Smarter.toggleGrindRequestByte, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.toggleGrindRequestByte, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
@@ -154,34 +213,34 @@ class CoffeeMachine
         if (isGrind !== true && isGrind !== false) {
             return callback("'isGrind' must be true (on) or false (off)");
         }
-        var isGrindAsInt = isGrind ? 1 : 0;
+        const isGrindAsInt = isGrind ? 1 : 0;
 
-        var cupsAsInt = parseInt(cups);
+        const cupsAsInt = parseInt(cups);
         if (isNaN(cupsAsInt) || cupsAsInt < 1 || cupsAsInt > 12) {
             return callback("'cups' must be a number between 1 to 12 inclusive");
         }
 
-        var strengthAsInt = parseInt(strength);
+        const strengthAsInt = parseInt(strength);
         if (isNaN(strengthAsInt) || strengthAsInt < 0 || strengthAsInt > 2) {
             return callback("'strength' must be 0 (weak), 1 (medium), or 2 (strong)");
         }
 
         winston.info('Brewing coffee with grind %s, cups %s, strength %s', isGrindAsInt, cupsAsInt, strengthAsInt);
-        var command = new Buffer([Smarter.brewOnRequestByte, cupsAsInt, strengthAsInt, 0x5 /*unknown*/, isGrindAsInt, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.brewOnRequestByte, cupsAsInt, strengthAsInt, 0x5 /*unknown*/, isGrindAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
     brewOnDefault(callback) {
 
         winston.info('Brewing coffee with default settings');
-        var command = new Buffer([Smarter.brewOnDefaultRequestByte, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.brewOnDefaultRequestByte, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
     brewOff(callback) {
 
         winston.info('Stopping coffee brew');
-        var command = new Buffer([Smarter.brewOffRequestByte, 0, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.brewOffRequestByte, 0, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
@@ -195,14 +254,14 @@ class CoffeeMachine
             }
         }
         winston.info('Turning on hotplate for %s mins', minsAsInt);
-        var command = new Buffer([Smarter.hotplateOnRequestByte, minsAsInt, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.hotplateOnRequestByte, minsAsInt, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
     hotplateOff(callback) {
 
         winston.info('Turning off hotplate');
-        var command = new Buffer([Smarter.hotplateOffRequestByte, Smarter.messageTerminator]);
+        const command = new Buffer([Smarter.hotplateOffRequestByte, Smarter.messageTerminator]);
         this.sendCommand(command, callback);
     }
 
@@ -218,66 +277,11 @@ class CoffeeMachine
 
     addSubscription(subscriptionId, timeoutInMs, callbackUrl) {
 
-        var expiry = Date.now() + timeoutInMs;
+        const expiry = Date.now() + timeoutInMs;
 
-        var obj = { subscriptionId, expiry, callbackUrl };
+        const obj = { subscriptionId, expiry, callbackUrl };
 
         this.subscriptions.set(subscriptionId, obj);
-    }
-
-    scheduleSubscriptionCallbackIfStatusChanged(s) {
-        const status = this.status;
-        if (status !== null &&
-            status.isBrewing === s.isBrewing &&
-            status.isCarafeDetected === s.isCarafeDetected &&
-            status.isGrind === s.isGrind &&
-            status.isHotplateOn === s.isHotplateOn &&
-            status.waterLevel === s.waterLevel &&
-            status.strength === s.strength &&
-            status.cups === s.cups)
-            return;
-
-        winston.info('Status has changed, preparing subscription callbacks');
-
-        var now = Date.now();
-
-        var schedule = s => setTimeout(() => this.doSubscriptionCallback(s), 0);
-
-        for (let subscription of this.subscriptions.values()) {
-            if (subscription.expiry >= now) {
-                winston.info('Scheduling callback to subscription %s', subscription.subscriptionId);
-                schedule(subscription);
-            }
-        }
-    }
-
-    doSubscriptionCallback(subscription) {
-        winston.info('Sending callback to subscription %s', subscription.subscriptionId);
-
-        const uri = url.parse(subscription.callbackUrl);
-
-        const options = {
-            "host": uri.hostname,
-            "port": uri.port,
-            "path": uri.path,
-            "method": "POST",
-            "headers": { 
-                "SID" : subscription.subscriptionId,
-                "Content-Type" : "application/json",
-            }
-        };
-
-        const r = { id: this.id, status: this.status };
-        const body = JSON.stringify(r);
-        var request = http.request(options, res => {
-            winston.info('Callback to subscription %s status code %s', subscription.subscriptionId, res.statusCode);
-        });
-
-        request.on('error', (e) => {
-            winston.info('Callback to subscription %s failed with error %s', subscription.subscriptionId, e);
-        });
-
-        request.end(body);        
     }
 
     toApiDevice() {
