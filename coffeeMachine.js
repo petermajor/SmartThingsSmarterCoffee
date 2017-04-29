@@ -62,7 +62,10 @@ class CoffeeMachine
     updateIp(ip) {
         if (this.ip === ip) return;
         this.ip = ip;
-        // TODO disconnect and reconnect?
+
+        this.disconnect();
+
+        setTimeout(() => this.connect(), 5000);
     }
 
     connect() {
@@ -166,6 +169,7 @@ class CoffeeMachine
 
         winston.info('Disconnecting from machine %s', this.ip);
         this.client.end();
+        this.isConnected = false;
     }
 
     setStrength(strength, callback) {
