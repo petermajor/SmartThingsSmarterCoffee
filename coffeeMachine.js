@@ -61,10 +61,11 @@ class CoffeeMachine
 
     updateIp(ip) {
         if (this.ip === ip) return;
+
+        winston.info('IP address has changed for machine %s to %s', this.id, this.ip, ip);
+        
         this.ip = ip;
-
         this.disconnect();
-
         setTimeout(() => this.connect(), 5000);
     }
 
