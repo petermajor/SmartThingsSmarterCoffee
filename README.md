@@ -23,7 +23,7 @@ To contol your coffee machine with SmartThings you'll need:
 
 | Component                 | Ver   | Link                                                                               |
 |---------------------------|-------|------------------------------------------------------------------------------------|
-| SmartThingsSmarterCoffee  | 1.1.1 | https://github.com/petermajor/SmartThingsSmarterCoffee                             |
+| SmartThingsSmarterCoffee  | 1.1.2 | https://github.com/petermajor/SmartThingsSmarterCoffee                             |
 | Smarter Manager           | 1.1.1 | https://github.com/petermajor/SmartThings/blob/master/apps/SmarterManager.groovy   |
 | Smarter Coffee            | 1.1.0 | https://github.com/petermajor/SmartThings/blob/master/devices/SmarterCoffee.groovy |
 
